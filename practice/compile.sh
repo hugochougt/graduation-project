@@ -11,7 +11,11 @@ function compile()
     echo "Compiling ${filename}"
     outfile=`echo ${filename} | cut -d . -f 1`
     g++ -ggdb `pkg-config --cflags` -o ${outfile}.o ${filename} `pkg-config --libs opencv`
-    echo "Output file ${outfile}"
+    if [ $? -eq 0 ] ; then
+        echo "Generated executable file ${outfile}.o ."
+    else
+        echo "Compilation failed."
+    fi
 }
 
 if [ $# -eq 0 ]; then
