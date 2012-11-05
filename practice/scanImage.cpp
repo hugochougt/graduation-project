@@ -16,17 +16,17 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	int divideWith;
+	int divideWidth;
 	stringstream s;
 	s << argv[2];
 	if (!s) {
 		cout << "Invalid number entered for dividing." << endl;
 	}
-	s >> divideWith;
+	s >> divideWidth;
 
 	uchar table[256];
 	for (int i = 0; i < 256; ++i)
-		table[i] = divideWith * (i / divideWith);
+		table[i] = divideWidth * (i / divideWidth);
 
 	double t;
 
