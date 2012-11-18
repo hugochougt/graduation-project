@@ -31,6 +31,7 @@ int main(int argc, char** argv)
 
     Mat frame, fgMask, fgImage;
     bool updateModel = true;
+    int erosionSize = 2;	// 2 seems be the best erosion size.
 
     while(true)
     {
@@ -38,25 +39,20 @@ int main(int argc, char** argv)
         if(frame.empty())
         	break;
 
-        // The usage of GaussianBulr() function reduce the performance of this program.
-        GaussianBlur(frame, frame, Size(3, 3), 0, 0);
-
         if(fgImage.empty())
         	fgImage.create(frame.size(), frame.type());
 
+        GaussianBlur(frame, frame, Size(3, 3), 0, 0);
         bgModel(frame, fgMask, updateModel ? -1 : 0);
 
         fgImage = Scalar::all(0);
+
         frame.copyTo(fgImage, fgMask);
 
-        Mat bgImage;
-        bgModel.getBackgroundImage(bgImage);
+        Mat element = getStructuringElement(MORPH_ELLIPSE, Size(2 * erosionSize + 1, 2 * erosionSize + 1), Point(erosionSize, erosionSize));
+        erode(fgImage, fgImage, element);
 
-        imshow("frame", frame);
-        imshow("foreground mask", fgMask);
         imshow(windowName, fgImage);
-        if(!bgImage.empty())
-        	imshow("mean background image", bgImage);
 
         char k = waitKey(30);
         if(k == 27)
