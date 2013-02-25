@@ -1,72 +1,56 @@
-#include "opencv2.hpp"
-#include <iostream>
+#include <sstream>
+#include "fish.h"
 
-using namespace std;
-using namespace cv;
+void help()
+{
+    cout << "Usage:" << endl;
+    cout << "\ttrain <fishname> <image> [images..]" << endl;
+}
+
 
 int main(int argc, char** argv)
 {
-    VideoCapture capture;
-    if(argc != 2)
+    if(argc < 3)
     {
-        cout << "Argument error!" << endl;
+        cout << "Too less argument!" << endl;
+        help();
         return -1;
     }
 
-    capture.open(argv[1]);
-    if(!capture.isOpened())
+    string fishName;
+    fishName = argv[1];
+
+    string outputFile = fishName + ".xml";
+
+    FileStorage fs(outputFile, FileStorage::WRITE);
+    int size = argc - 2;
+
+    stringstream itoa;
+    string ID;
+
+    fs << "fishName" << fishName;
+    fs << "size" << size;
+
+    for(int i = 1; i <= size; i++)
     {
-        cout << "Can't open video." << endl;
-        return -1;
+        string imgFile = argv[i + 1];
+        Mat img = imread(imgFile, CV_LOAD_IMAGE_COLOR);
+        if(!img.data)
+        {
+            cout << "Can't open image " << imgFile << endl;
+            continue;
+        }
+        itoa << "No" << i;
+        itoa >> ID;
+        Fish fish(img);
+        fish.featureDetect();
+        fs << ID << fish;
+        itoa.clear();
     }
 
-    Mat frame, fgMask, fgImage;
-    bool stop(false);
-    BackgroundSubtractorMOG2 bgSubtractor;
-    bool updateModel = false;
+    fs.release();
 
-    string winMainWindow = "Main Window";
-    string winForeground = "Foreground Window";
-
-    char key = '\0';
-
-    namedWindow(winMainWindow);
-    namedWindow(winForeground);
-
-    while(!stop)
-    {
-        capture >> frame;
-        if(frame.empty())
-            break;
-
-        if(fgImage.empty())
-            fgImage.create(frame.size(), frame.type());
-
-        GaussianBlur(frame, frame, Size(3, 3), 0, 0);
-
-        bgSubtractor(frame, fgMask, -1);
-
-        medianBlur(fgMask, fgMask, 5);
-
-        fgImage = Scalar::all(0);
-        frame.copyTo(fgImage, fgMask);
-
-        imshow(winMainWindow, frame);
-        imshow(winForeground, fgImage);
-        
-        key = waitKey(30);
-        if(key == 'q')
-        {
-            cout << "exit" << endl;
-            stop = true;
-        }
-        if(key == ' ')
-        {
-            updateModel = !updateModel;
-            cout << "updateModel = " << updateModel << endl;
-        }
-    }
-
+    cout << "Finished training." << endl;
     return 0;
 }
 
