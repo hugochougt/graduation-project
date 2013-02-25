@@ -5,7 +5,7 @@
  *      Author: hugo
  */
 
-#include "opencv2/core/core.hpp"
+#include <opencv2/core/core.hpp>
 #include <iostream>
 #include <string>
 
@@ -15,12 +15,19 @@ using namespace cv;
 class MyData {
 public:
 	MyData() :
-			A(0), X(0), id() {
+			A(0), X(0), id("0") {
 	}
 
-	explicit MyData(int) :
-			A(97), X(CV_PI), id("1234567") {
+	MyData(int x) :
+			A(x), X(CV_PI), id("1234567") {
 	}
+
+    MyData(const MyData& data)
+    {
+        A = data.A;
+        X = data.X;
+        id = data.id;
+    }
 
 	void write(FileStorage& fs) const {
 		fs << "{" << "A" << A << "X" << X << "id" << id << "}";
@@ -41,8 +48,7 @@ void write(FileStorage& fs, const string&, const MyData& x) {
 	x.write(fs);
 }
 
-void read(const FileNode& node, MyData& x, const MyData& defaultValue =
-		MyData()) {
+void read(const FileNode& node, MyData& x, const MyData& defaultValue = MyData()) {
 	if (node.empty())
 		x = defaultValue;
 	else
@@ -69,16 +75,18 @@ int main(int argc, char** argv) {
         Mat R = Mat_<uchar>::eye(3, 3);
         Mat T = Mat_<double>::zeros(3, 1);
         MyData data(1);
+        MyData aa(11), bb(33), cc;
+
 
         FileStorage fs(filename, FileStorage::WRITE);
 
         fs << "iterationNr" << 100;
         fs << "strings" << "[";
-        fs << "image.jpg" << "Awesomeness" << " photo.png";
+        fs << aa << bb << cc;
         fs << "]";
 
         fs << "Mapping" << "{";
-        fs<< "One" << 1 << "Two" << 2;
+        fs<< "One" << aa << "Two" << bb;
         fs << "}";
 
         fs << "R" << R;
@@ -113,11 +121,16 @@ int main(int argc, char** argv) {
 
         FileNodeIterator it = n.begin(), itEnd = n.end();
         for (; it != itEnd; it++)
-            cout << (string)*it << endl;
+        {
+            FileNode item = *it;
+            MyData d;
+            item["_"] >> d;
+            cout << d << endl;
+        } 
 
         n = fs["Mapping"];
-        cout << "Two    " << (int) (n["Two"]) << "; ";
-        cout << "One    " << (int) (n["One"]) << endl << endl;
+        cout << "Two    " << (MyData)(n["Two"]) << "; ";
+        cout << "One    " << (MyData)(n["One"]) << endl << endl;
 
         MyData data;
         Mat R, T;

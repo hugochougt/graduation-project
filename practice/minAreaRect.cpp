@@ -40,7 +40,7 @@ void thresh_callback(int , void*)
 
     threshold(src_gray, threshold_output, thresh, 255, THRESH_BINARY);
 
-    findContours(threshold_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+    findContours(threshold_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
     vector<RotatedRect> minRect(contours.size());
     vector<RotatedRect> minEllipse(contours.size());
@@ -48,28 +48,30 @@ void thresh_callback(int , void*)
     for(int i = 0; i < contours.size(); i++)
     {
         minRect[i] = minAreaRect(Mat(contours[i]));
-        if(contours[i].size() > 10)
+        cout << contours[i].size() << endl;
+        if(contours[i].size() > 24)
         {
             minEllipse[i] = fitEllipse(Mat(contours[i]));
         }
     }
 
-    Mat drawing = Mat::zeros(threshold_output.size(), CV_8UC3);
+    //Mat drawing = Mat::zeros(threshold_output.size(), CV_8UC3);
     for(int i = 0; i < contours.size(); i++)
     {
         Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
         //drawContours(drawing, contours, i , color, 1, 8, vector<Vec4i>(), 0, Point());
-        ellipse(drawing, minEllipse[i], color, 2, 8);
+        ellipse(src, minEllipse[i], color, 2, 8);
         
+        /*
         Point2f rect_points[4];
         minRect[i].points(rect_points);
         for(int j = 0; j < 4; j++)
         {
             line(drawing, rect_points[j], rect_points[(j + 1) % 4], color, 1, 8);
         }
-
+*/
     }
 
     namedWindow("Contours", CV_WINDOW_AUTOSIZE);
-    imshow("Contours", drawing);
+    imshow("Contours", src);
 }
